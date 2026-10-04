@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ÉtiquettePro — Étiquettes INCO automatiques</title>
+<meta name="description" content="Générez vos étiquettes INCO (règlement UE 1169/2011) : allergènes en gras, composition, DLC, conservation, origine. Gratuit pour les artisans.">
+<style>
+  :root { --bg:#1a1a28; --bg2:#2a1a4e; --card:#23233a; --amber:#f59e0b; --text:#e8e8f0; --muted:#9a9ab0; --ok:#4ade80; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Segoe UI", system-ui, sans-serif; background:linear-gradient(160deg,var(--bg),var(--bg2)); color:var(--text); min-height:100vh; line-height:1.6; }
+  .wrap { max-width:1080px; margin:0 auto; padding:28px 20px 60px; }
+  header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:26px; }
+  .logo { font-size:1.5rem; font-weight:700; } .logo span { color:var(--amber); }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:26px; }
+  @media (max-width:860px){ .grid { grid-template-columns:1fr; } }
+  .panel { background:var(--card); border:1px solid #34344e; border-radius:16px; padding:22px; }
+  .panel h2 { font-size:1.05rem; margin-bottom:14px; color:var(--amber); }
+  label { display:block; font-size:0.88rem; color:var(--muted); margin:12px 0 4px; }
+  input[type=text], input[type=number], input[type=date], textarea, select {
+    width:100%; background:#16162a; border:1px solid #3a3a58; color:var(--text);
+    border-radius:10px; padding:9px 12px; font-size:0.95rem; font-family:inherit;
+  }
+  textarea { min-height:110px; resize:vertical; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .radio { display:flex; gap:18px; margin-top:8px; }
+  .radio label { margin:0; display:flex; align-items:center; gap:6px; color:var(--text); }
+  .btn {
+    display:inline-block; background:var(--amber); color:#1a1a28; font-weight:700;
+    padding:12px 26px; border-radius:12px; border:none; cursor:pointer; font-size:1rem;
+    margin-top:18px; font-family:inherit;
+  }
+  .btn.ghost { background:transparent; color:var(--amber); border:1px solid var(--amber); margin-left:8px; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .badge { background:rgba(245,158,11,.15); color:var(--amber); border:1px solid rgba(245,158,11,.4);
+    border-radius:999px; padding:3px 12px; font-size:0.8rem; }
+  .badge.forced { background:rgba(248,113,113,.15); color:#f87171; border-color:rgba(248,113,113,.4); cursor:pointer; }
+  .hint { font-size:0.8rem; color:var(--muted); margin-top:6px; }
+  /* étiquette imprimable */
+  .label {
+    background:#fff; color:#111; border-radius:10px; padding:22px; font-family:"Arial", sans-serif;
+    font-size:0.92rem; line-height:1.45; box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  .label h3 { font-size:1.15rem; margin-bottom:8px; text-transform:uppercase; letter-spacing:.4px; }
+  .label .poids { font-weight:700; margin:4px 0 8px; }
+  .label .ing { margin:8px 0; }
+  .label .ing b { font-weight:800; }
+  .label .contient { font-weight:800; margin:8px 0; }
+  .label .ligne { margin:2px 0; }
+  .label hr { border:none; border-top:1px dashed #999; margin:8px 0; }
+  .label .fab { font-size:0.8rem; color:#555; margin-top:8px; }
+  .disclaimer { font-size:0.78rem; color:var(--muted); margin-top:18px; }
+  footer { text-align:center; color:var(--muted); font-size:0.85rem; margin-top:40px; }
+  footer a { color:var(--amber); text-decoration:none; }
+  @media print {
+    body * { visibility:hidden; }
+    .label, .label * { visibility:visible; }
+    .label { position:absolute; left:0; top:0; width:100%; box-shadow:none; border-radius:0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Étiquette<span>Pro</span></div>
+    <div class="hint" style="margin:0">Règlement UE n° 1169/2011 (INCO) — 14 allergènes officiels</div>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>1 · Votre produit</h2>
+      <label>Dénomination de vente *</label>
+      <input type="text" id="nom" placeholder="Ex : Tarte aux pommes">
+
+      <div class="row2">
+        <div><label>Poids net (g)</label><input type="number" id="poids" value="500" min="1"></div>
+        <div><label>Prix de vente (€)</label><input type="number" id="prix" step="0.01" placeholder="facultatif"></div>
+      </div>
+
+      <label>Ingrédients (du plus utilisé au moins utilisé, un par ligne)</label>
+      <textarea id="ingredients" placeholder="250 g farine de blé&#10;120 g beurre&#10;80 g sucre&#10;2 œufs&#10;1 pincée de sel"></textarea>
+      <div class="hint">Les allergènes sont détectés et mis en gras automatiquement.</div>
+
+      <label>Allergènes détectés</label>
+      <div class="badges" id="badges"><span class="hint">Saisissez les ingrédients…</span></div>
+      <div class="hint">Ajouter manuellement :</div>
+      <div class="badges" id="forced-badges"></div>
+
+      <h2 style="margin-top:18px">2 · Conservation &amp; origine</h2>
+      <div class="radio">
+        <label><input type="radio" name="dlc" value="dlc" checked> DLC (périssable)</label>
+        <label><input type="radio" name="dlc" value="dluo"> DLUO (non périssable)</label>
+      </div>
+      <label>Date limite</label>
+      <input type="date" id="date-limite">
+      <label>Conservation</label>
+      <input type="text" id="conservation" value="À conserver au frais entre 0 et +4 °C">
+      <label>Origine / provenance</label>
+      <input type="text" id="origine" placeholder="Ex : Fabrication artisanale à Martigues, France">
+      <label>Traces éventuelles (facultatif)</label>
+      <input type="text" id="traces" placeholder="Ex : Traces possibles de fruits à coque">
+
+      <button class="btn" onclick="generer()">⚡ Générer l'étiquette</button>
+      <button class="btn ghost" onclick="window.print()">🖨️ Imprimer</button>
+      <p class="disclaimer">⚠️ Outil d'assistance : la vérification finale et la responsabilité réglementaire restent celles de l'artisan. Les mentions obligatoires dépendent du mode de vente (préemballé, à la découpe, vrac).</p>
+    </div>
+
+    <div class="panel">
+      <h2>3 · Votre étiquette</h2>
+      <div id="label-zone"><p class="hint">Remplissez le formulaire et cliquez « Générer l'étiquette ».</p></div>
+    </div>
+  </div>
+
+  <footer>ÉtiquettePro par <a href="https://ludo1377.github.io/devdusud-guides/">Dev du Sud</a> — Fos-sur-Mer · <a href="https://ludo1377.github.io/siteveille/">SiteVeille</a></footer>
+</div>
+
+<script>
+// 14 allergènes réglementaires (règlement UE 1169/2011, annexe II)
+const ALLERGENES = [
+  { id:"gluten", nom:"Céréales contenant du gluten", mots:["blé","froment","seigle","orge","avoine","épeautre","kamut","farine","semoule","chapelure","pain","boulgour","couscous"] },
+  { id:"crustaces", nom:"Crustacés", mots:["crevette","crabe","homard","langoustine","écrevisse","gambas","tourteau"] },
+  { id:"oeufs", nom:"Œufs", mots:["oeuf","œuf","blanc d'œuf","jaune d'œuf","ovalbumine","ovoproduit"] },
+  { id:"poissons", nom:"Poissons", mots:["poisson","saumon","thon","cabillaud","sardine","anchois","morue","colin","truite","maquereau","merlu","lieu","haddock"] },
+  { id:"arachides", nom:"Arachides", mots:["cacahuète","arachide","cacahuete","beurre de cacahuète","huile d'arachide"] },
+  { id:"soja", nom:"Soja", mots:["soja","tofu","lécithine de soja","sauce soja","miso","edamame"] },
+  { id:"lait", nom:"Lait et produits laitiers", mots:["lait","crème","creme","beurre","fromage","yaourt","yogourt","lactose","lactosérum","caséine","petit-lait","babeurre","chantilly"] },
+  { id:"coques", nom:"Fruits à coque", mots:["amande","noisette","noix de cajou","cajou","noix de pécan","pécan","macadamia","pistache","noix du brésil","pralin","praliné","noix"] },
+  { id:"celeri", nom:"Céleri", mots:["céleri","celeri"] },
+  { id:"moutarde", nom:"Moutarde", mots:["moutarde"] },
+  { id:"sesame", nom:"Graines de sésame", mots:["sésame","sesame","tahini"] },
+  { id:"sulfites", nom:"Sulfites (≥ 10 mg/kg)", mots:["sulfite","disulfite","métabisulfite","e220","e221","e222","e223","e224","e225","e226","e227","e228","so2"] },
+  { id:"lupin", nom:"Lupin", mots:["lupin"] },
+  { id:"mollusques", nom:"Mollusques", mots:["moule","huître","huitre","coquille saint-jacques","st-jacques","calmar","encornet","poulpe","seiche","palourde","bigorneau","escargot de mer"] },
+];
+const FORCE_LABELS = ALLERGENES.map(a => a.nom);
+
+function detecter(lignes) {
+  const trouves = new Set();
+  const details = [];
+  const noCoco = l => /coco/i.test(l); // la noix de coco n'est PAS un fruit à coque (règlement)
+  for (const ligne of lignes) {
+    const l = ligne.toLowerCase();
+    for (const a of ALLERGENES) {
+      for (const mot of a.mots) {
+        const m = mot.toLowerCase();
+        if (m === "noix" && noCoco(l)) continue;
+        if (l.includes(m)) {
+          if (!trouves.has(a.id)) { trouves.add(a.id); details.push(a); }
+        }
+      }
+    }
+  }
+  return details;
+}
+
+function prixAuKilo(poids, prix) {
+  if (!poids || !prix) return null;
+  return (prix / poids * 1000).toFixed(2).replace(".", ",");
+}
+
+function generer() {
+  const nom = document.getElementById("nom").value.trim() || "PRODUIT SANS NOM";
+  const poids = parseFloat(document.getElementById("poids").value) || 0;
+  const prix = parseFloat(document.getElementById("prix").value.replace(",", ".")) || 0;
+  const ingBrut = document.getElementById("ingredients").value.split("\n").map(s => s.trim()).filter(Boolean);
+  const dlcMode = document.querySelector('input[name=dlc]:checked').value;
+  const date = document.getElementById("date-limite").value;
+  const conservation = document.getElementById("conservation").value.trim();
+  const origine = document.getElementById("origine").value.trim();
+  const traces = document.getElementById("traces").value.trim();
+
+  const detects = detecter(ingBrut);
+  const forced = Array.from(document.querySelectorAll("#forced-badges .badge.forced.active"))
+    .map(b => ALLERGENES.find(a => a.nom === b.dataset.nom)).filter(Boolean);
+  const tous = [...detects];
+  for (const f of forced) if (!tous.find(t => t.id === f.id)) tous.push(f);
+
+  // badges détectés
+  const bd = document.getElementById("badges");
+  bd.innerHTML = tous.length ? tous.map(a => `<span class="badge">${a.nom}</span>`).join("") : '<span class="badge" style="opacity:.6">Aucun allergène détecté</span>';
+
+  // liste ingrédients avec allergènes en gras
+  const ingHtml = ingBrut.map(l => {
+    let sortie = l;
+    for (const a of ALLERGENES) {
+      for (const mot of a.mots.sort((x,y)=>y.length-x.length)) {
+        if (new RegExp(mot, "i").test(l)) {
+          if (mot.toLowerCase()==="noix" && /coco/i.test(l)) continue;
+          sortie = sortie.replace(new RegExp("(" + mot.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ")", "ig"), "<b>$1</b>");
+        }
+      }
+    }
+    return sortie;
+  }).join(", ");
+
+  const dateTxt = date ? (dlcMode === "dlc"
+    ? "À consommer jusqu'au " + date.split("-").reverse().join("/")
+    : "À consommer de préférence avant le " + date.split("-").reverse().join("/")) : "";
+  const pak = prixAuKilo(poids, prix);
+
+  const label = `
+    <div class="label" id="label">
+      <h3>${nom.replace(/</g,"&lt;")}</h3>
+      ${poids ? `<div class="poids">Poids net : ${poids} g${pak ? " · Prix au kilo : " + pak + " €/kg" : ""}</div>` : ""}
+      <div class="ing"><span style="font-weight:700">Ingrédients :</span> ${ingHtml || "—"}</div>
+      ${tous.length ? `<div class="contient">Contient : ${tous.map(a=>a.nom).join(", ")}</div>` : ""}
+      ${traces ? `<div class="ligne"><b>${traces.replace(/</g,"&lt;")}</b></div>` : ""}
+      ${dateTxt ? `<div class="ligne">${dateTxt}</div>` : ""}
+      ${conservation ? `<div class="ligne">${conservation.replace(/</g,"&lt;")}</div>` : ""}
+      ${origine ? `<div class="ligne">${origine.replace(/</g,"&lt;")}</div>` : ""}
+      <hr>
+      <div class="fab">Fabriqué le ${new Date().toLocaleDateString("fr-FR")} — ____________________ (nom de l'établissement)</div>
+    </div>`;
+  document.getElementById("label-zone").innerHTML = label;
+  document.getElementById("label-zone").insertAdjacentHTML("beforeend",
+    '<p class="hint" style="margin-top:10px">Bouton « Imprimer » = seule l\'étiquette sort sur papier.</p>');
+}
+
+// boutons d'ajout manuel des 14 allergènes
+(function () {
+  const zone = document.getElementById("forced-badges");
+  zone.innerHTML = ALLERGENES.map(a =>
+    `<span class="badge forced" data-nom="${a.nom}" onclick="this.classList.toggle('active')">+ ${a.nom}</span>`).join("");
+})();
+</script>
+</body>
+</html>
