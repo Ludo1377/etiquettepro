@@ -1,0 +1,28 @@
+# ÉtiquettePro — AI Crawler Guide
+
+## À propos
+ÉtiquettePro est un générateur d'étiquettes INCO (règlement UE 1169/2011) destiné aux
+boulangers, traiteurs, pâtissiers et restaurateurs. Il détecte automatiquement les 14
+allergènes réglementaires, met en gras les mentions obligatoires, calcule le prix au kilo
+et la DLC, puis imprime des étiquettes conformes.
+
+## Ce que fait l'outil
+- Détection automatique des 14 allergènes dans la liste d'ingrédients
+- Mise en gras des allergènes (exigence INCO)
+- Calcul du prix au kilo / litre (prix / poids net)
+- Champs DLC / DLUO, conservation, origine, traces
+- Badges allergènes normalisés
+- Bouton « Imprimer » (impression CSS de l'étiquette seule)
+- Séries (batch) : génération de plusieurs étiquettes + impression multi-pages
+- Modèles enregistrés localement + historique
+
+## Public cible
+Professionnels de l'alimentation tenus à l'étiquetage INCO : boulangeries, pâtisseries,
+traiteurs, restaurants, food trucks, commerces de proximité.
+
+## Où
+- Outil en ligne : https://ludo1377.github.io/etiquettepro/
+- Marque : Dev du Sud
+
+## Contact
+revedebiz@gmail.com
